@@ -8,7 +8,7 @@ export default class Incrementor {
             }
             else {
                 // TODO: handle max values
-                let terms = this.getTerms();
+                let terms = this.getTerms(oldTimestamp);
                 let total = this._value;
                 for (let term of terms) {
                     total += term.Evaluate(newTimestamp / 1000) - term.Evaluate(oldTimestamp / 1000);
@@ -54,12 +54,12 @@ export default class Incrementor {
             this._value = this.GetValue();
             this._listeners.forEach((listener) => listener.onChange());
         };
-        this.getTerms = () => {
+        this.getTerms = (baseInput) => {
             if (this._terms == null) {
                 this._terms = [];
                 for (let rate of this._rates) {
                     if (rate.Source != null) {
-                        this._terms = this._terms.concat(rate.Source.getTerms().map(t => t.Integrate()));
+                        this._terms = this._terms.concat(rate.Source.getTerms(baseInput).map(t => t.Integrate()));
                     }
                     else {
                         this._terms.push(new Term(rate.Weight, 1));
@@ -68,7 +68,7 @@ export default class Incrementor {
                 // add a term to align to current value
                 let offset = 0;
                 for (let term of this._terms) {
-                    offset += term.Evaluate(this._timeStamp / 1000);
+                    offset += term.Evaluate((this._timeStamp - baseInput) / 1000);
                 }
                 this._terms.push(new Term(this._value - offset, 0));
             }
