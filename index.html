@@ -6,5 +6,23 @@
 <body>
 	<h1>Awaiting Enlightenment...</h1>
 	<p>Please return later.</p>
+
+	<p>Incr. #1: <span id="incr-1">0</span></p>
+	<p>Incr. #2: <span id="incr-2">0</span></p>
+	<p><button id="btn-update">Update</button></p>
+
+	<script type="module">
+		import { Incrementor } from "incremental.js";
+
+		var incr1 = new Incrementor(0,null,1);
+		var incr2 = new Incrementor(0,null,incr1);
+
+		document.querySelector('#btn-update').addEventListener('click', (e) => {
+			e.preventDefault();
+
+			document.querySelector('#incr-1').innerHTML = incr1.GetValue();
+			document.querySelector('#incr-2').innerHTML = incr2.GetValue();
+		});
+	</script>
 </body>
 </html>
