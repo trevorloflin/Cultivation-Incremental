@@ -59,7 +59,7 @@ export default class Incrementor {
                 this._terms = [];
                 for (let rate of this._rates) {
                     if (rate.Source != null) {
-                        this._terms.concat(rate.Source.getTerms().map(t => t.Integrate()));
+                        this._terms = this._terms.concat(rate.Source.getTerms().map(t => t.Integrate()));
                     }
                     else {
                         this._terms.push(new Term(rate.Weight, 1));
