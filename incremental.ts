@@ -126,6 +126,7 @@ export default class Incrementor {
     private _terms: Term[];
     protected getTerms: () => Term[] = () => {
         if (this._terms == null) {
+            this._terms = [];
             for (let rate of this._rates) {
                 if (rate.Source != null) {
                     this._terms.concat(rate.Source.getTerms().map(t => t.Integrate()));
