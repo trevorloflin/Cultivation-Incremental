@@ -134,12 +134,16 @@ export default class Incrementor {
                     this._terms.push(new Term(rate.Weight, 1));
                 }
             }
-
-            // add a term to align to current value
-            let offset = 0;
-            for (let term of this._terms) {
-                offset += term.Evaluate((this._timeStamp - baseInput) / 1000);
-            }
+        }
+        // add a term to align to current value
+        let offset = 0;
+        for (let term of this._terms) {
+            offset += term.Evaluate((this._timeStamp - baseInput) / 1000);
+        }
+        let constantTerms = this._terms.filter(t => t.Power === 0);
+        if (constantTerms.length > 0) {
+            constantTerms[0].Mantissa += this._value - offset;
+        } else {
             this._terms.push(new Term(this._value - offset, 0));
         }
 
