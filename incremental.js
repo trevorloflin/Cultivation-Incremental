@@ -125,7 +125,7 @@ export default class Incrementor {
 }
 class Rate {
 }
-class Term {
+export class Term {
     constructor(mantissa, power) {
         this.Integrate = (times = 1) => {
             let newPower = this.Power;
