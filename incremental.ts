@@ -156,7 +156,7 @@ class Rate {
     public Source: Incrementor;
 }
 
-class Term {
+export class Term {
     public Mantissa: number;
     public Power: number;
     public MinInput: number;

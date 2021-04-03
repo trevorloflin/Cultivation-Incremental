@@ -12,7 +12,8 @@
 	<p><button id="btn-update">Update</button></p>
 
 	<script type="module">
-		import Incrementor from "./incremental.js";
+		import { Incrementor, Term } from "./incremental.js";
+		window.incr = { Incrementor: Incrementor, Term: Term }; // for debugging
 
 		var incr1 = new Incrementor(0,null,1);
 		var incr2 = new Incrementor(0,null,incr1);
