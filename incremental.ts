@@ -8,7 +8,7 @@ export default class Incrementor {
     private _listeners: Incrementor[];
 
     public constructor(value: number, max: number, rate?: number | Incrementor, discrete?: number) {
-        this._timeStamp = 0; // for testing. // new Date().valueOf();
+        this._timeStamp = new Date().valueOf();
         this._value = value;
         this._max = max;
         this._rates = [];
@@ -26,7 +26,7 @@ export default class Incrementor {
 
     public GetValue: () => number = () => {
         let oldTimestamp = this._timeStamp;
-        let newTimestamp = oldTimestamp + 10000; // for testing. // new Date().valueOf();
+        let newTimestamp = new Date().valueOf();
 
         if (this._discrete > 0) {
             return 0; // TODO: handle discrete increments
@@ -45,7 +45,7 @@ export default class Incrementor {
 
 
     public SetValue = (newValue: number) => {
-        this._timeStamp = this._timeStamp + 10000; // for testing. // new Date().valueOf();
+        this._timeStamp = new Date().valueOf();
         this._value = newValue;
         this._terms = null;
 
