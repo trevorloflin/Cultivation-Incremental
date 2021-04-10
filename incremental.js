@@ -8,13 +8,11 @@ export default class Incrementor {
             }
             else {
                 // TODO: handle max values
-                let terms = this.getTerms(oldTimestamp);
-                let total = this._value;
-                for (let term of terms) {
-                    total += term.Evaluate((newTimestamp - oldTimestamp) / 1000) - term.Evaluate(0);
-                }
+                let timeDiff = (newTimestamp - oldTimestamp) / 1000;
+                let terms = this.getTerms(timeDiff);
+                let totalNew = terms.map(t => t.Evaluate(timeDiff)).reduce((a, b) => a + b);
+                this._value += totalNew;
                 this._timeStamp = newTimestamp;
-                this._value = total;
                 return this._value;
             }
         };
