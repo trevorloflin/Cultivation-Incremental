@@ -54,30 +54,34 @@ export default class Incrementor {
             this._value = this.GetValue();
             this._listeners.forEach((listener) => listener.onChange());
         };
-        this.getTerms = (baseInput) => {
+        this.getTerms = (timeDiff) => {
             if (this._terms == null) {
                 this._terms = [];
                 for (let rate of this._rates) {
                     if (rate.Source != null) {
-                        this._terms = this._terms.concat(rate.Source.getTerms(baseInput).map(t => t.Integrate()));
+                        this._terms = this._terms.concat(rate.Source.getTerms(timeDiff).map(t => t.Integrate()));
+                        // add a term to align to current value
+                        var currentSourceValue = rate.Source.GetValue();
+                        var sourceTerms = rate.Source.getTerms(timeDiff);
+                        var projectedSourceValue = sourceTerms.map(t => t.Evaluate(timeDiff)).reduce((a, b) => a + b);
+                        this._terms.push(new Term(currentSourceValue - projectedSourceValue, 1));
                     }
                     else {
                         this._terms.push(new Term(rate.Weight, 1));
                     }
                 }
             }
-            // add a term to align to current value
-            let offset = 0;
-            for (let term of this._terms) {
-                offset += term.Evaluate((this._timeStamp - baseInput) / 1000);
-            }
-            let constantTerms = this._terms.filter(t => t.Power === 0);
-            if (constantTerms.length > 0) {
-                constantTerms[0].Mantissa += this._value - offset;
-            }
-            else {
-                this._terms.push(new Term(this._value - offset, 0));
-            }
+            // // add a term to align to current value
+            // let offset = 0;
+            // for (let term of this._terms) {
+            //     offset += term.Evaluate((this._timeStamp - baseInput) / 1000);
+            // }
+            // let constantTerms = this._terms.filter(t => t.Power === 0);
+            // if (constantTerms.length > 0) {
+            //     constantTerms[0].Mantissa += this._value - offset;
+            // } else {
+            //     this._terms.push(new Term(this._value - offset, 0));
+            // }
             return this._terms;
         };
         this._timeStamp = 0; // for testing. // new Date().valueOf();
