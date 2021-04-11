@@ -1,5 +1,5 @@
 export default class Incrementor {
-    constructor(value, startTime, max, rate, discrete) {
+    constructor(value, max, rate, discrete, startTime) {
         this.GetValue = (atTime) => {
             let oldTimestamp = this._timeStamp;
             let newTimestamp = atTime || Date.now().valueOf();

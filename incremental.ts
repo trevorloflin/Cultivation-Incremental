@@ -8,7 +8,7 @@ export default class Incrementor {
     private _listeners: Incrementor[];
     private _terms: Term[];
 
-    public constructor(value: number, startTime?: number, max?: number, rate?: number | Incrementor, discrete?: number) {
+    public constructor(value: number, max?: number, rate?: number | Incrementor, discrete?: number, startTime?: number) {
         this._timeStamp = startTime || Date.now().valueOf();
         this._value = value;
         this._max = max;
