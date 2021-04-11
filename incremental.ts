@@ -33,10 +33,9 @@ export default class Incrementor {
             return 0; // TODO: handle discrete increments
         } else {
             // TODO: handle max values
-            let timeDiff = (newTimestamp - oldTimestamp) / 1000;
             let terms = this.getTerms(oldTimestamp, newTimestamp);
 
-            let totalNew = terms.map(t => t.Evaluate(timeDiff)).reduce((a,b) => a + b);
+            let totalNew = terms.map(t => t.Evaluate(newTimestamp - oldTimestamp)).reduce((a,b) => a + b);
             this._value += totalNew;
             this._timeStamp = newTimestamp;
 
