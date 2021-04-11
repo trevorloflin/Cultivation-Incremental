@@ -6,9 +6,10 @@ export default class Incrementor {
     private _rates: Rate[];
     private _discrete: number;
     private _listeners: Incrementor[];
+    private _terms: Term[];
 
-    public constructor(value: number, max: number, rate?: number | Incrementor, discrete?: number) {
-        this._timeStamp = new Date().valueOf();
+    public constructor(value: number, startTime?: number, max?: number, rate?: number | Incrementor, discrete?: number) {
+        this._timeStamp = startTime || Date.now().valueOf();
         this._value = value;
         this._max = max;
         this._rates = [];
@@ -24,16 +25,16 @@ export default class Incrementor {
         }
     }
 
-    public GetValue: () => number = () => {
+    public GetValue = (atTime?: number) => {
         let oldTimestamp = this._timeStamp;
-        let newTimestamp = new Date().valueOf();
+        let newTimestamp = atTime || Date.now().valueOf();
 
         if (this._discrete > 0) {
             return 0; // TODO: handle discrete increments
         } else {
             // TODO: handle max values
             let timeDiff = (newTimestamp - oldTimestamp) / 1000;
-            let terms = this.getTerms(timeDiff);
+            let terms = this.getTerms(oldTimestamp, newTimestamp);
 
             let totalNew = terms.map(t => t.Evaluate(timeDiff)).reduce((a,b) => a + b);
             this._value += totalNew;
@@ -43,22 +44,21 @@ export default class Incrementor {
         }
     }
 
-
-    public SetValue = (newValue: number) => {
-        this._timeStamp = new Date().valueOf();
+    public SetValue = (newValue: number, atTime?: number) => {
+        this._timeStamp = atTime || Date.now().valueOf();
         this._value = newValue;
 
-        this.onChange();
+        this.onChange(atTime);
     }
 
-    public SetMax = (newMax: number) => {
+    public SetMax = (newMax: number, atTime?: number) => {
         this._max = newMax;
 
-        this.onChange();
+        this.onChange(atTime);
     }
 
-    public AddRate = (newRate: number | Incrementor, newWeight: number = 1) => {
-        this.onChange();
+    public AddRate = (newRate: number | Incrementor, newWeight: number = 1, atTime?: number) => {
+        this.onChange(atTime);
 
         if (typeof newRate === 'object') {
             if (newRate.checkDuplicate(this)) {
@@ -72,18 +72,18 @@ export default class Incrementor {
         }
     }
 
-    public ClearRate(oldRate: number | Incrementor) {
+    public ClearRate(oldRate: number | Incrementor, atTime?: number) {
         let oldIndex = this._rates.findIndex(r => (typeof oldRate === 'number' ? r.Weight : r.Source) === oldRate);
         if (oldIndex >= 0) {
-            this.onChange();
+            this.onChange(atTime);
 
             this._rates[oldIndex].Source?.removeListener(this);
             this._rates.splice(oldIndex, 1);
         }
     }
 
-    public ClearRates() {
-        this.onChange();
+    public ClearRates(atTime?: number) {
+        this.onChange(atTime);
 
         for (let rate of this._rates) {
             rate.Source?.removeListener(this);
@@ -113,23 +113,26 @@ export default class Incrementor {
         }
     }
 
-    private onChange = () => {
-        this._value = this.GetValue();
+    private onChange = (time: number) => {
+        this._value = this.GetValue(time);
 
-        this._listeners.forEach((listener) => listener.onChange());
+        this._listeners.forEach((listener) => listener.onChange(time));
     }
 
-    //private _terms: Term[];
-    protected getTerms = (timeDiff: number) => {
+    private getSourceTerms = (startTime: number, stopTime: number) => {
+
+    }
+
+    protected getTerms = (startTime: number, endTime: number) => {
         let terms = [];
         for (let rate of this._rates) {
             if (rate.Source != null) {
-                terms = terms.concat(rate.Source.getTerms(timeDiff).map(t => t.Integrate()));
+                terms = terms.concat(rate.Source.getTerms(startTime, endTime).map(t => t.Integrate()));
 
                 // add a term to align to current value
-                let currentSourceValue = rate.Source.GetValue();
-                let sourceTerms = rate.Source.getTerms(timeDiff);
-                let projectedSourceValue = sourceTerms.map(t => t.Evaluate(timeDiff)).reduce((a, b) => a + b);
+                let currentSourceValue = rate.Source.GetValue(endTime);
+                let sourceTerms = rate.Source.getTerms(startTime, endTime);
+                let projectedSourceValue = sourceTerms.map(t => t.Evaluate(endTime - startTime)).reduce((a, b) => a + b);
                 terms.push(new Term(currentSourceValue - projectedSourceValue, 1))
             } else {
                 terms.push(new Term(rate.Weight, 1));

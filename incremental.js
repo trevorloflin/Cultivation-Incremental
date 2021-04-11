@@ -1,32 +1,32 @@
 export default class Incrementor {
-    constructor(value, max, rate, discrete) {
-        this.GetValue = () => {
+    constructor(value, startTime, max, rate, discrete) {
+        this.GetValue = (atTime) => {
             let oldTimestamp = this._timeStamp;
-            let newTimestamp = new Date().valueOf();
+            let newTimestamp = atTime || Date.now().valueOf();
             if (this._discrete > 0) {
                 return 0; // TODO: handle discrete increments
             }
             else {
                 // TODO: handle max values
                 let timeDiff = (newTimestamp - oldTimestamp) / 1000;
-                let terms = this.getTerms(timeDiff);
+                let terms = this.getTerms(oldTimestamp, newTimestamp);
                 let totalNew = terms.map(t => t.Evaluate(timeDiff)).reduce((a, b) => a + b);
                 this._value += totalNew;
                 this._timeStamp = newTimestamp;
                 return this._value;
             }
         };
-        this.SetValue = (newValue) => {
-            this._timeStamp = new Date().valueOf();
+        this.SetValue = (newValue, atTime) => {
+            this._timeStamp = atTime || Date.now().valueOf();
             this._value = newValue;
-            this.onChange();
+            this.onChange(atTime);
         };
-        this.SetMax = (newMax) => {
+        this.SetMax = (newMax, atTime) => {
             this._max = newMax;
-            this.onChange();
+            this.onChange(atTime);
         };
-        this.AddRate = (newRate, newWeight = 1) => {
-            this.onChange();
+        this.AddRate = (newRate, newWeight = 1, atTime) => {
+            this.onChange(atTime);
             if (typeof newRate === 'object') {
                 if (newRate.checkDuplicate(this)) {
                     throw new Error('Circular reference attempt detected!');
@@ -47,20 +47,21 @@ export default class Incrementor {
                 this._listeners.splice(index, 1);
             }
         };
-        this.onChange = () => {
-            this._value = this.GetValue();
-            this._listeners.forEach((listener) => listener.onChange());
+        this.onChange = (time) => {
+            this._value = this.GetValue(time);
+            this._listeners.forEach((listener) => listener.onChange(time));
         };
-        //private _terms: Term[];
-        this.getTerms = (timeDiff) => {
+        this.getSourceTerms = (startTime, stopTime) => {
+        };
+        this.getTerms = (startTime, endTime) => {
             let terms = [];
             for (let rate of this._rates) {
                 if (rate.Source != null) {
-                    terms = terms.concat(rate.Source.getTerms(timeDiff).map(t => t.Integrate()));
+                    terms = terms.concat(rate.Source.getTerms(startTime, endTime).map(t => t.Integrate()));
                     // add a term to align to current value
-                    let currentSourceValue = rate.Source.GetValue();
-                    let sourceTerms = rate.Source.getTerms(timeDiff);
-                    let projectedSourceValue = sourceTerms.map(t => t.Evaluate(timeDiff)).reduce((a, b) => a + b);
+                    let currentSourceValue = rate.Source.GetValue(endTime);
+                    let sourceTerms = rate.Source.getTerms(startTime, endTime);
+                    let projectedSourceValue = sourceTerms.map(t => t.Evaluate(endTime - startTime)).reduce((a, b) => a + b);
                     terms.push(new Term(currentSourceValue - projectedSourceValue, 1));
                 }
                 else {
@@ -69,7 +70,7 @@ export default class Incrementor {
             }
             return terms;
         };
-        this._timeStamp = new Date().valueOf();
+        this._timeStamp = startTime || Date.now().valueOf();
         this._value = value;
         this._max = max;
         this._rates = [];
@@ -84,18 +85,18 @@ export default class Incrementor {
             }
         }
     }
-    ClearRate(oldRate) {
+    ClearRate(oldRate, atTime) {
         var _a;
         let oldIndex = this._rates.findIndex(r => (typeof oldRate === 'number' ? r.Weight : r.Source) === oldRate);
         if (oldIndex >= 0) {
-            this.onChange();
+            this.onChange(atTime);
             (_a = this._rates[oldIndex].Source) === null || _a === void 0 ? void 0 : _a.removeListener(this);
             this._rates.splice(oldIndex, 1);
         }
     }
-    ClearRates() {
+    ClearRates(atTime) {
         var _a;
-        this.onChange();
+        this.onChange(atTime);
         for (let rate of this._rates) {
             (_a = rate.Source) === null || _a === void 0 ? void 0 : _a.removeListener(this);
         }
