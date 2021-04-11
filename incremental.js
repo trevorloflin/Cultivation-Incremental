@@ -9,7 +9,7 @@ export default class Incrementor {
             else {
                 // TODO: handle max values
                 let terms = this.getSourceTerms(oldTimestamp, newTimestamp);
-                let totalNew = terms.map(t => t.Evaluate(newTimestamp) - t.Evaluate(oldTimestamp)).reduce((a, b) => a + b);
+                let totalNew = terms.map(t => t.Evaluate(newTimestamp - this._baseTime) - t.Evaluate(oldTimestamp - this._baseTime)).reduce((a, b) => a + b);
                 this._value += totalNew;
                 this._timeStamp = newTimestamp;
                 return this._value;
@@ -87,7 +87,8 @@ export default class Incrementor {
             }
             return terms;
         };
-        this._timeStamp = startTime || Date.now().valueOf() / 1000;
+        this._baseTime = startTime || Date.now().valueOf() / 1000;
+        this._timeStamp = this._baseTime;
         this._value = value;
         this._max = max;
         this._rates = [];

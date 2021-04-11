@@ -1,5 +1,6 @@
 
 export default class Incrementor {
+    private _baseTime: number;
     private _timeStamp: number; // time value was last updated, with millisecond precision
     private _value: number;
     private _max: number;
@@ -9,7 +10,8 @@ export default class Incrementor {
     private _terms: Term[];
 
     public constructor(value: number, max?: number, rate?: number | Incrementor, discrete?: number, startTime?: number) {
-        this._timeStamp = startTime || Date.now().valueOf() / 1000;
+        this._baseTime = startTime || Date.now().valueOf() / 1000;
+        this._timeStamp = this._baseTime;
         this._value = value;
         this._max = max;
         this._rates = [];
@@ -35,7 +37,7 @@ export default class Incrementor {
             // TODO: handle max values
             let terms = this.getSourceTerms(oldTimestamp, newTimestamp);
 
-            let totalNew = terms.map(t => t.Evaluate(newTimestamp) - t.Evaluate(oldTimestamp)).reduce((a,b) => a + b);
+            let totalNew = terms.map(t => t.Evaluate(newTimestamp - this._baseTime) - t.Evaluate(oldTimestamp - this._baseTime)).reduce((a,b) => a + b);
             this._value += totalNew;
             this._timeStamp = newTimestamp;
 
