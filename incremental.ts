@@ -9,7 +9,7 @@ export default class Incrementor {
     private _terms: Term[];
 
     public constructor(value: number, max?: number, rate?: number | Incrementor, discrete?: number, startTime?: number) {
-        this._timeStamp = startTime || Date.now().valueOf();
+        this._timeStamp = startTime || Date.now().valueOf() / 1000;
         this._value = value;
         this._max = max;
         this._rates = [];
@@ -27,7 +27,7 @@ export default class Incrementor {
 
     public GetValue = (atTime?: number) => {
         let oldTimestamp = this._timeStamp;
-        let newTimestamp = atTime || Date.now().valueOf();
+        let newTimestamp = atTime || Date.now().valueOf() / 1000;
 
         if (this._discrete > 0) {
             return 0; // TODO: handle discrete increments
@@ -45,7 +45,7 @@ export default class Incrementor {
     }
 
     public SetValue = (newValue: number, atTime?: number) => {
-        this._timeStamp = atTime || Date.now().valueOf();
+        this._timeStamp = atTime || Date.now().valueOf() / 1000;
         this._value = newValue;
 
         this.onChange(atTime);
