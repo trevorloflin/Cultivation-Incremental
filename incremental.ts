@@ -33,9 +33,9 @@ export default class Incrementor {
             return 0; // TODO: handle discrete increments
         } else {
             // TODO: handle max values
-            let terms = this.getTerms(oldTimestamp, newTimestamp);
+            let terms = this.getSourceTerms(oldTimestamp, newTimestamp);
 
-            let totalNew = terms.map(t => t.Evaluate(newTimestamp - oldTimestamp)).reduce((a,b) => a + b);
+            let totalNew = terms.map(t => t.Evaluate(newTimestamp) - t.Evaluate(oldTimestamp)).reduce((a,b) => a + b);
             this._value += totalNew;
             this._timeStamp = newTimestamp;
 
@@ -118,21 +118,39 @@ export default class Incrementor {
         this._listeners.forEach((listener) => listener.onChange(time));
     }
 
-    private getSourceTerms = (startTime: number, stopTime: number) => {
+    private getSourceTerms = (startTime: number, endTime: number) => {
+        let terms = [];
+        for (let rate of this._rates) {
+            if (rate.Source != null) {
+                terms = terms.concat(rate.Source.getTerms(startTime, endTime).map(t => t.Integrate()));
 
+                // old method using diff
+                // // add a term to align to current value
+                // let currentSourceValue = rate.Source.GetValue(endTime);
+                // let sourceTerms = rate.Source.getTerms(startTime, endTime);
+                // let projectedSourceValue = sourceTerms.map(t => t.Evaluate(endTime - startTime)).reduce((a, b) => a + b);
+                // terms.push(new Term(currentSourceValue - projectedSourceValue, 1))
+            } else {
+                terms.push(new Term(rate.Weight, 1));
+            }
+        }
+
+        return terms;
     }
 
+    // TODO: this should only return self-terms for discrete or maxed
     protected getTerms = (startTime: number, endTime: number) => {
         let terms = [];
         for (let rate of this._rates) {
             if (rate.Source != null) {
                 terms = terms.concat(rate.Source.getTerms(startTime, endTime).map(t => t.Integrate()));
 
-                // add a term to align to current value
-                let currentSourceValue = rate.Source.GetValue(endTime);
-                let sourceTerms = rate.Source.getTerms(startTime, endTime);
-                let projectedSourceValue = sourceTerms.map(t => t.Evaluate(endTime - startTime)).reduce((a, b) => a + b);
-                terms.push(new Term(currentSourceValue - projectedSourceValue, 1))
+                // old method using diff
+                // // add a term to align to current value
+                // let currentSourceValue = rate.Source.GetValue(endTime);
+                // let sourceTerms = rate.Source.getTerms(startTime, endTime);
+                // let projectedSourceValue = sourceTerms.map(t => t.Evaluate(endTime - startTime)).reduce((a, b) => a + b);
+                // terms.push(new Term(currentSourceValue - projectedSourceValue, 1))
             } else {
                 terms.push(new Term(rate.Weight, 1));
             }
